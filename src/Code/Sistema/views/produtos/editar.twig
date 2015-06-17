@@ -1,0 +1,76 @@
+{% extends 'layout.twig' %}
+
+{% block container %}
+
+<div class="row">
+    <div class="col-lg-12">
+        <h2>Editar Produto</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+
+        <form action="{{ path('editar-produto', {'id': produto.id}) }}" method="post" class="form-horizontal" enctype="multipart/form-data">
+
+            <div class="form-group">
+                <label>Nome do Produto</label>
+                <input type="text" name="nome" class="form-control" required="required" value="{{ produto.nome }}">
+            </div>
+            <div class="form-group">
+                <label>Descrição do Produto</label>
+                <input type="text" name="descricao" class="form-control" required="required"  value="{{ produto.descricao }}">
+            </div>
+            <div class="form-group">
+                <label>Valor do Produto</label>
+                <input type="text" name="valor" class="form-control" required="required" value="{{ produto.valor }}">
+            </div>
+            <div class="form-group">
+                <label>Categoria</label>
+                <select type="text" name="categoria" class="form-control">
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" {% if categoria.id == produto.categoria.id %} selected="selected" {% endif %}>{{ categoria.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% set tagsSelected = [] %}
+            {% if produto.tags is iterable %}
+                {% for tagSelected in produto.tags %}
+                    {% set tagsSelected = tagsSelected|merge([tagSelected.id]) %}
+                {% endfor %}
+            {% endif %}
+
+            <div class="form-group">
+                <label>Tags</label>
+                {% for tag in tags %}
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="tag[]" value="{{ tag.id }}" {% if tag.id in tagsSelected %} checked {% endif %}>
+                            {{ tag.nome }}
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label>Imagem</label>
+                <input type="file" name="path" class="form-control">
+                {% if (produto.path != null) %}
+                <img src="/uploads/images/{{ produto.path }}" width="200" alt=""/>
+                {% else %}
+                    <img src="/uploads/images/sem_foto.jpg" width="200" alt=""/>
+                {% endif %}
+            </div>
+
+
+            <input type="hidden" name="id" value="{{ produto.id }}">
+            <input type="hidden" id="_method" name="_method" value="PUT" />
+            <button type="submit" class="btn btn-info"><i class="glyphicon glyphicon-check"></i> Salvar</button>
+
+        </form>
+
+    </div>
+</div>
+
+
+{% endblock %}

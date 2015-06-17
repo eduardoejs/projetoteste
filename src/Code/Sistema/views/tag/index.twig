@@ -1,0 +1,53 @@
+{% extends 'layout.twig' %}
+
+{% block container %}
+
+<div class="row">
+    <div class="col-lg-12">
+        <h2>Lista de Tags</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-9">
+        <a href="{{ path('nova-tag') }}" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i> Tag</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+
+        {% for message in app.session.getFlashBag.get('messageSuccess') %}
+            <div class="alert alert-success" role="alert">{{ message }}</div>
+        {% endfor %}
+
+        {% for message in app.session.getFlashBag.get('messageFail') %}
+            <div class="alert alert-success" role="alert">{{ message }}</div>
+        {% endfor %}
+
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tag in tags %}
+
+                    <tr>
+                        <td>{{ tag.nome }}</td>
+                        <td>
+                            <a href="{{ path('editar-tag', {id: tag.id}) }}" class="btn btn-info btn-sm">Editar</a>
+                            <a href="{{ path('remover-tag', {id: tag.id}) }}" class="btn btn-danger btn-sm">Remover</a>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% endblock %}

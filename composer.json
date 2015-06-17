@@ -1,0 +1,20 @@
+{
+    "config" : {
+        "bin-dir" : "bin/"
+    },
+
+    "require" : {
+        "silex/silex": "~1.2",
+        "twig/twig": ">=1.8,<2.0-dev",
+        "symfony/twig-bridge": "~2.3",
+        "doctrine/orm": "~2.4",        
+        "symfony/security": "~2.1",
+        "symfony/serializer": "~2.1"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Code\\Sistema\\" : "src/Code/Sistema/"
+        }
+    }
+}
