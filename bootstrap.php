@@ -5,19 +5,6 @@ $app = new Silex\Application();
 
 $app['debug'] = true;
 
-$app->register(new Silex\Provider\TwigServiceProvider(), array(
-    'twig.path' => __DIR__.'/src/Code/Sistema/views',
-));
-
-$app->register(new Silex\Provider\UrlGeneratorServiceProvider());
-
-$app->register(new Silex\Provider\SessionServiceProvider());
-
-$app->register(new Silex\Provider\ValidatorServiceProvider());
-
-//$app->register(new Silex\Provider\ServiceControllerServiceProvider());
-
-
 /*Doctrine config*/
 use Doctrine\ORM\Tools\Setup,
     Doctrine\ORM\EntityManager,
@@ -28,6 +15,9 @@ use Doctrine\ORM\Tools\Setup,
     Doctrine\Common\Annotations\AnnotationRegistry,
     Doctrine\Common\Annotations\AnnotationReader,
     Doctrine\Common\ClassLoader;
+
+use Silex\Provider\SecurityServiceProvider;
+use Silex\Provider\SessionServiceProvider;
 
 $cache = new Doctrine\Common\Cache\ArrayCache;
 $annotationReader = new Doctrine\Common\Annotations\AnnotationReader;
@@ -70,3 +60,46 @@ $em = EntityManager::create(
     $config,
     $evm
 );
+
+$app['user_repository'] = $app->share(function($app) use($em){
+    
+    $user = new Code\Sistema\Entity\User;
+    
+    $repo = $em->getRepository('Code\Sistema\Entity\User');
+    $repo->setPasswordEncoder($app['security.encoder_factory']->getEncoder($user));
+    
+    return $repo;
+});
+
+$app->register(new Silex\Provider\TwigServiceProvider(), array(
+    'twig.path' => __DIR__.'/src/Code/Sistema/views',
+));
+
+$app->register(new Silex\Provider\UrlGeneratorServiceProvider());
+
+$app->register(new Silex\Provider\SessionServiceProvider());
+
+$app->register(new Silex\Provider\ValidatorServiceProvider());
+
+$app->register(new SessionServiceProvider());
+
+$app->register(new SecurityServiceProvider(), array(
+    'security.firewalls' => array(
+        'admin' => array(
+            'anonymous' => true,
+            'pattern' => '^/',
+            'form' => array('login_path' => '/login', 'check_path' => '/admin/login_check'),
+            'users' => $app->share(function() use($app){
+                return $app['user_repository'];
+            }),
+            'logout' => array('logout_path' => '/admin/logout')
+        )
+    )
+));
+
+$app['security.access_rules'] = array(
+    array('^/admin', 'ROLE_ADMIN')
+);
+
+
+return $app;

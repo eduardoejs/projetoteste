@@ -16,9 +16,9 @@ class UserRepository extends EntityRepository implements UserProviderInterface{
     
     public function createAdminUser($username, $password){
         $user = new User();
-        $user->username = $username;
-        $user->plainPassword = $password;
-        $user->roles = 'ROLE_ADMIN';
+        $user->setUsername($username);
+        $user->setPlainPassword($password);
+        $user->setRoles('ROLE_ADMIN');
         
         return $this->insert($user);
     }
@@ -36,11 +36,20 @@ class UserRepository extends EntityRepository implements UserProviderInterface{
     }
 
     public function loadUserByUsername($username) {
+        $user = new User();
+        $user = $this->findByUsername($username);
         
+        if(!$user){
+            throw new UsernameNotFoundException(sprintf('Usuário %s não existe', $username));
+        }
+        
+        return $this->arrayToObject($user->toArray());
     }
 
     public function refreshUser(UserInterface $user) {
-        
+        if(!$user instanceof  User){
+            throw new UnsupportedUserException(sprintf('Instances of %s are not supported', get_class($user)));
+        }
     }
 
     public function supportsClass($class) {
@@ -53,5 +62,50 @@ class UserRepository extends EntityRepository implements UserProviderInterface{
         }
     }
     
-    7.6
+    public function objectToArray(User $user){
+        return array(
+            'id' => $user->id,
+            'username' => $user->username,
+            'password' => $user->password,
+            'roles' => implode(',', $user->roles),
+            'created_at' => $user->createdAt->format(self::DATE_TIME)
+        );
+    }
+    
+    /**
+     * 
+     * @param type $userArr
+     * @param \Code\Sistema\Entity\User $user
+     * @return \Code\Sistema\Entity\User
+     */
+    public function arrayToObject($userArr, $user = null){
+        
+        if(!$user){
+            $user = new User();
+            $user->id = isset($userArr['id']) ? $userArr['id'] : null;
+        }
+        
+        $username = isset($userArr['username']) ? $userArr['username'] : null;
+        $password = isset($userArr['password']) ? $userArr['password'] : null;
+        $roles = isset($userArr['roles']) ? explode(',', $userArr['username']) : array();
+        $createdAt = isset($userArr['created_at']) ? \Datetime::createFromFormat(self::DATE_FORMAT, $userArr['created_at']) : null;
+        
+        if($username){
+            $user->username = $username;
+        }
+        
+        if($password){
+            $user->password = $password;
+        }
+        
+        if($roles){
+            $user->setRoles($roles);
+        }
+        
+        if($createdAt){
+            $user->createdAt = $createdAt;
+        }
+        
+        return $user;
+    }
 }

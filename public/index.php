@@ -13,11 +13,26 @@ use Symfony\Component\HttpFoundation\Response;
 $app->get('/', function () use ($app) {
 
     return $app['twig']->render('home/index.twig', array(
-
+        'username' => $app['security']->getToken()->getUser()
     ));
 
 })->bind('home');
 
+
+$app->get('/criaAdmin', function() use($app){
+    $repo = $app['user_repository'];
+    $repo->createAdminUser('admin', 'admin');
+    return $app->redirect($app['url_generator']->generate('home'));
+    
+});
+
+$app->get('/login', function(Request $request) use($app){
+    return $app['twig']->render('/home/login.twig', array(
+        'error' => $app['security.last_error']($request),
+        'last_username' => $app['session']->get('_security.last_username')
+    ));
+    
+})->bind('login');
 
 $routes = new Routes();
 $routes->init($app, $em);

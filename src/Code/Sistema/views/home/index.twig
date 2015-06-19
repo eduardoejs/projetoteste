@@ -2,4 +2,11 @@
 
 {% block container %}
 
+    Olá, 
+{% if is_granted('IS_AUTHENTICATED_FULLY') %}
+    {{ username }}
+{% else %}
+    Visitante!
+{% endif %}
+
 {% endblock %}

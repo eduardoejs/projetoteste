@@ -65,7 +65,7 @@ class User implements UserInterface{
     }
 
     function getRoles() {
-        return $this->roles;
+        return array($this->roles);
     }
 
     function getCreatedAt() {
@@ -89,7 +89,10 @@ class User implements UserInterface{
     }
 
     function setRoles($roles) {
-        $this->roles = $roles;
+        if(!in_array($roles, $this->roles)){
+            $this->roles[] = $roles;
+        }
+        return $this;
     }
 
     function setCreatedAt($createdAt) {
@@ -111,7 +114,7 @@ class User implements UserInterface{
     public function toArray(){
         return array(
             'id' => $this->id,
-            'username' => $this->username,
+            'username' => $this->getUsername(),
             'salt' => $this->getSalt(),
             'roles' => $this->getRoles(),
             'password' => $this->getPassword()
