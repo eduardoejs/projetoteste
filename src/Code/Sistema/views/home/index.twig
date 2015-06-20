@@ -4,9 +4,14 @@
 
     Olá, 
 {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-    {{ username }}
+    {{ username }} <br/>Fazer <a href="{{ path('admin_logout') }}"> Logout</a>
+    <br/>Seu perfil é {{ role }}
 {% else %}
     Visitante!
+{% endif %}
+
+{% if is_granted('ROLE_ADMIN')%}
+    <br/>Só ADMIN pode ver esse link <a href="/secured?_switch_user=fabien">Switch to Fabien</a>
 {% endif %}
 
 {% endblock %}

@@ -23,13 +23,21 @@ class UserRepository extends EntityRepository implements UserProviderInterface{
         return $this->insert($user);
     }
     
+    public function createUser($username, $password){
+        $user = new User();
+        $user->setUsername($username);
+        $user->setPlainPassword($password);
+        $user->setRoles('ROLE_USER');
+        
+        return $this->insert($user);
+    }
+    
     public  function insert($user){
         $this->encodePassword($user);
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
         return $user;
     }
-
 
     public function setPasswordEncoder(PasswordEncoderInterface $passwordEncoder){
         $this->passwordEncoder = $passwordEncoder;
@@ -43,13 +51,16 @@ class UserRepository extends EntityRepository implements UserProviderInterface{
             throw new UsernameNotFoundException(sprintf('Usuário %s não existe', $username));
         }
         
-        return $this->arrayToObject($user->toArray());
+        //return $this->arrayToObject($user->toArray());
+        return new User($user['username'], $user['password'], explode(',', $user['roles']), true, true, true, true);
+        //return new User($user['username'], $user['password'], explode(',', $user['roles']), true, true, true, true);
     }
 
     public function refreshUser(UserInterface $user) {
         if(!$user instanceof  User){
             throw new UnsupportedUserException(sprintf('Instances of %s are not supported', get_class($user)));
         }
+        return $this->loadUserByUsername($user->getUsername());
     }
 
     public function supportsClass($class) {

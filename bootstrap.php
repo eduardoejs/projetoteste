@@ -18,6 +18,7 @@ use Doctrine\ORM\Tools\Setup,
 
 use Silex\Provider\SecurityServiceProvider;
 use Silex\Provider\SessionServiceProvider;
+use Silex\Provider\DoctrineServiceProvider;
 
 $cache = new Doctrine\Common\Cache\ArrayCache;
 $annotationReader = new Doctrine\Common\Annotations\AnnotationReader;
@@ -61,13 +62,16 @@ $em = EntityManager::create(
     $evm
 );
 
-$app['user_repository'] = $app->share(function($app) use($em){
-    
-    $user = new Code\Sistema\Entity\User;
-    
+$app['user_repository'] = $app->share(function($app) use($em){    
+    $user = new Code\Sistema\Entity\User;    
     $repo = $em->getRepository('Code\Sistema\Entity\User');
     $repo->setPasswordEncoder($app['security.encoder_factory']->getEncoder($user));
     
+    return $repo;
+});
+
+$app['user_provider'] = $app->share(function() use($app){
+    $repo = new Code\Sistema\Entity\UserProvider($app['db']);    
     return $repo;
 });
 
@@ -77,11 +81,19 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
 
 $app->register(new Silex\Provider\UrlGeneratorServiceProvider());
 
-$app->register(new Silex\Provider\SessionServiceProvider());
-
 $app->register(new Silex\Provider\ValidatorServiceProvider());
 
 $app->register(new SessionServiceProvider());
+
+$app->register(new DoctrineServiceProvider(), array(
+    'db.options' => array(
+        'driver' => 'pdo_mysql',
+        'dbhost' => 'localhost',
+        'dbname' => 'code_doctrine',
+        'user' => 'root',
+        'password' => 'root',
+    ),
+));
 
 $app->register(new SecurityServiceProvider(), array(
     'security.firewalls' => array(
@@ -90,16 +102,31 @@ $app->register(new SecurityServiceProvider(), array(
             'pattern' => '^/',
             'form' => array('login_path' => '/login', 'check_path' => '/admin/login_check'),
             'users' => $app->share(function() use($app){
-                return $app['user_repository'];
+                return new Code\Sistema\Entity\UserProvider($app['db']);
             }),
             'logout' => array('logout_path' => '/admin/logout')
         )
     )
 ));
 
+/*$app['security.encoder.digest'] = $app->share(function ($app) {
+    // use the sha1 algorithm
+    // don't base64 encode the password
+    // use only 1 iteration
+    return new \Symfony\Component\Security\Core\Encoder\MessageDigestPasswordEncoder('sha1', false, 1);
+});*/
+
 $app['security.access_rules'] = array(
-    array('^/admin', 'ROLE_ADMIN')
+    array('^/admin', 'ROLE_ADMIN'),
+    array('^/produtos', 'ROLE_USER'),
+    array('^/tags', 'ROLE_TESTE')
+    
 );
 
+$app['security.role_hierarchy'] = array(
+    'ROLE_ADMIN' => array('ROLE_USER', 'ROLE_ALLOWED_TO_SWITCH', 'ROLE_TESTE'),
+    'ROLE_USER' => array('ROLE_USER'),
+    'ROLE_TESTE' => array('ROLE_TESTE')
+);
 
 return $app;

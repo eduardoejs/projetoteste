@@ -49,22 +49,20 @@ class ProdutoController implements ControllerProviderInterface
         return $produtoController;
     }
 
-
     public function indexAction(Application $app, $page)
     {
+        if (false === $app['security']->isGranted('ROLE_ADMIN')) {
+            throw new \Symfony\Component\Security\Core\Exception\AccessDeniedException('VOCÊ NÃO TEM PERMISSÃO');
+        }        
         //Limite de registros
         $limitRegs = 10;
-
         $numProdutos = $this->service->getNumProdutos();
-
         $paginator = new \Code\Sistema\Helper\Paginator($page, $limitRegs, $numProdutos, $app['url_generator']->generate('produtos'));
-
         $produtos = $this->service->getProdutos($page, $limitRegs);
-
         return $app['twig']->render('produtos/index.twig', array(
             'produtos' => $produtos,
-            'paginacao' => $paginator->createLinks(),
-        ));
+            'paginacao' => $paginator->createLinks()            
+        ));        
     }
 
     public function searchAction(Application $app, $request, $page)
